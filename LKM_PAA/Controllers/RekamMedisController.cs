@@ -1,4 +1,4 @@
-﻿using LKM_PAA.Helpers;
+using LKM_PAA.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LKM_PAA.Controllers
@@ -74,7 +74,7 @@ namespace LKM_PAA.Controllers
 
             var query = @"
                 SELECT 
-                    rm.id_rekam_medis,
+                    rm.id,
                     p.nama AS nama_pasien,
                     d.nama AS nama_dokter,
                     k.tanggal_kunjungan,
@@ -96,7 +96,7 @@ namespace LKM_PAA.Controllers
             {
                 list.Add(new
                 {
-                    id = reader["id_rekam_medis"],
+                    id = reader["id"],
                     pasien = reader["nama_pasien"],
                     dokter = reader["nama_dokter"],
                     tanggal = reader["tanggal_kunjungan"],
@@ -121,18 +121,31 @@ namespace LKM_PAA.Controllers
             using var conn = _db.GetConnection();
             conn.Open();
 
+            var cekDokter = _db.GetCommand(conn,
+                "SELECT id_dokter FROM dokter WHERE id_dokter = @id");
+            cekDokter.Parameters.AddWithValue("@id", id);
+
+            if (cekDokter.ExecuteScalar() == null)
+            {
+                return NotFound(new ApiError
+                {
+                    Message = "Dokter tidak ditemukan"
+                });
+            }
+
+            // 🔥 QUERY REKAM MEDIS
             var query = @"
-                SELECT 
-                    rm.id_rekam_medis,
-                    p.nama,
-                    rm.diagnosa,
-                    rm.tindakan,
-                    rm.biaya
-                FROM rekam_medis rm
-                JOIN kunjungan k ON rm.id_kunjungan = k.id_kunjungan
-                JOIN pasien p ON k.id_pasien = p.id_pasien
-                WHERE rm.id_dokter = @id
-            ";
+            SELECT 
+                rm.id,
+                p.nama,
+                rm.diagnosa,
+                rm.tindakan,
+                rm.biaya
+            FROM rekam_medis rm
+            JOIN kunjungan k ON rm.id_kunjungan = k.id_kunjungan
+            JOIN pasien p ON k.id_pasien = p.id_pasien
+            WHERE rm.id_dokter = @id
+    ";
 
             var cmd = _db.GetCommand(conn, query);
             cmd.Parameters.AddWithValue("@id", id);
@@ -144,7 +157,7 @@ namespace LKM_PAA.Controllers
             {
                 list.Add(new
                 {
-                    id = reader["id_rekam_medis"],
+                    id = reader["id"],
                     pasien = reader["nama"],
                     diagnosa = reader["diagnosa"],
                     tindakan = reader["tindakan"],
