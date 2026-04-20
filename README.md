@@ -145,4 +145,4 @@ File tersebut sudah berisi:
 
 ## Link Video Presentasi
 
-(Tambahkan link video di sini)
+https://www.youtube.com/watch?v=KCbNLeDjczI
